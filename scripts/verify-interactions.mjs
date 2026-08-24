@@ -17,6 +17,18 @@ import path from "node:path";
 
 import puppeteer from "puppeteer-core";
 
+/* Resolver DNS lokal kadang menyimpan hasil NXDOMAIN dari sebelum subdomain
+   dibuat. HOST_RESOLVER_RULES memaksa browser memakai alamat IP yang benar
+   tanpa mengubah nama host, jadi sertifikat tetap diverifikasi seperti biasa.
+   Contoh: HOST_RESOLVER_RULES="MAP contoh.com 216.198.79.65" */
+const BROWSER_ARGS = [
+  "--no-sandbox",
+  "--disable-dev-shm-usage",
+  ...(process.env.HOST_RESOLVER_RULES
+    ? [`--host-resolver-rules=${process.env.HOST_RESOLVER_RULES}`]
+    : []),
+];
+
 const BASE = (process.env.AUDIT_URL ?? "http://localhost:4321").replace(/\/$/, "");
 const chrome = [
   process.env.CHROME_PATH,
@@ -55,7 +67,7 @@ async function main() {
   const browser = await puppeteer.launch({
     executablePath: chrome,
     headless: "new",
-    args: ["--no-sandbox"],
+    args: BROWSER_ARGS,
   });
 
   /* ---------------------------------------------------------------- */
