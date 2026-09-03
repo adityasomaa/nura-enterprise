@@ -1,3 +1,4 @@
+import { CLIENT } from "@/config/client";
 import type { Locale } from "@/data/site-content";
 
 export const LOCALES = ["id", "en"] as const;
@@ -299,7 +300,7 @@ const id = {
     meta: {
       title: "Kebijakan Privasi",
       description:
-        "Kebijakan privasi situs Workshop Nura Enterprise: data apa yang diterima lewat form konsultasi dan bagaimana data itu diperlakukan.",
+        `Kebijakan privasi situs ${CLIENT.name}: data apa yang diterima lewat form konsultasi dan bagaimana data itu diperlakukan.`,
     },
     header: {
       sectionTitle: "Ketentuan",
@@ -339,7 +340,7 @@ const id = {
     meta: {
       title: "Syarat dan Ketentuan",
       description:
-        "Syarat dan ketentuan penggunaan situs Workshop Nura Enterprise, termasuk sifat informasi yang ditampilkan dan batasan tanggung jawab.",
+        `Syarat dan ketentuan penggunaan situs ${CLIENT.name}, termasuk sifat informasi yang ditampilkan dan batasan tanggung jawab.`,
     },
     header: {
       sectionTitle: "Ketentuan",
@@ -662,7 +663,7 @@ const en: typeof id = {
     meta: {
       title: "Privacy Policy",
       description:
-        "Privacy policy for the Workshop Nura Enterprise site: what the consultation form receives and how that information is treated.",
+        `Privacy policy for the ${CLIENT.name} site: what the consultation form receives and how that information is treated.`,
     },
     header: {
       sectionTitle: "Legal",
@@ -702,7 +703,7 @@ const en: typeof id = {
     meta: {
       title: "Terms of Service",
       description:
-        "Terms of service for the Workshop Nura Enterprise site, covering the nature of the information shown and the limits of liability.",
+        `Terms of service for the ${CLIENT.name} site, covering the nature of the information shown and the limits of liability.`,
     },
     header: {
       sectionTitle: "Legal",

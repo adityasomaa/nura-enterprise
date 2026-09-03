@@ -58,11 +58,11 @@ export function LenisProvider() {
     sync();
     query.addEventListener("change", sync);
     reduced.addEventListener("change", sync);
-    window.addEventListener("nura:scrolltop", toTop);
+    window.addEventListener("site:scrolltop", toTop);
     return () => {
       query.removeEventListener("change", sync);
       reduced.removeEventListener("change", sync);
-      window.removeEventListener("nura:scrolltop", toTop);
+      window.removeEventListener("site:scrolltop", toTop);
       stop();
     };
   }, []);

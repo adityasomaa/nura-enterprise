@@ -104,7 +104,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   const scrollToTop = useCallback(() => {
     window.scrollTo(0, 0);
     // Lenis menyimpan posisi targetnya sendiri, jadi ikut diberi tahu.
-    window.dispatchEvent(new Event("nura:scrolltop"));
+    window.dispatchEvent(new Event("site:scrolltop"));
   }, []);
 
   const navigate = useCallback(
@@ -177,7 +177,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
       await nextFrame();
       if (cancelled) return;
       window.scrollTo(0, 0);
-      window.dispatchEvent(new Event("nura:scrolltop"));
+      window.dispatchEvent(new Event("site:scrolltop"));
       await nextFrame();
       if (cancelled) return;
       setPhase("opening");

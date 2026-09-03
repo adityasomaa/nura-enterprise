@@ -19,8 +19,9 @@ import { mkdir, writeFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { CLIENT } from "../src/config/client.ts";
 import { ALBUMS, RIAS_ALBUMS, type SceneId, type StyleId } from "../src/data/site-content.ts";
-import { oklchToHex, mixHex, shiftHex } from "./lib/color.mjs";
+import { oklchToHex, mixHex, shiftHex, parseOklch } from "./lib/color.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "public", "graphics");
@@ -586,8 +587,17 @@ function frameSvg(seedKey: string, style: StyleId, scene: SceneId): string {
 /* -------------------------------------------------------------------------- */
 
 function heroSvg(): string {
-  const rng = mulberry32(hashSeed("hero-nura"));
-  const p = PALETTES.rustic;
+  /* Disemai dari slug klien, jadi susunan rangkaian bunganya berbeda untuk tiap
+     klien dan tidak ada dua situs yang hero-nya persis sama. Warna aksen klien
+     ikut masuk sebagai aksen bunga dan garis lengkung dalam. */
+  const rng = mulberry32(hashSeed(`hero-${CLIENT.slug}`));
+  const accent = parseOklch(CLIENT.accent.base);
+  const p: Palette = {
+    ...PALETTES.rustic,
+    accent: oklchToHex(CLIENT.accent.base),
+    deep: oklchToHex(CLIENT.accent.strong),
+    mid: oklchToHex({ l: Math.min(0.78, accent.l + 0.24), c: accent.c * 0.55, h: accent.h }),
+  };
   const hw = 2400;
   const hh = 1500;
   const floor = 1180;
@@ -607,7 +617,7 @@ function heroSvg(): string {
     { cx: 1200, w: 780, h: 830, fill: oklchToHex("oklch(0.826 0.048 68)") },
   ];
   for (const a of arches) out.push(path(archPath(a.cx, floor, a.w, a.h), a.fill));
-  out.push(path(archPath(1200, floor, 780, 830), "none", p.deep, 4));
+  out.push(path(archPath(1200, floor, 780, 830), "none", oklchToHex(CLIENT.accent.strong), 4));
 
   // Panggung dan dua bidang samping, supaya bagian bawah punya bentuk yang jelas.
   out.push(rect(760, floor - 44, 880, 44, oklchToHex("oklch(0.788 0.050 66)"), 6));

@@ -15,7 +15,7 @@ export type Consent = "unknown" | "accepted" | "rejected";
 
 export const CONSENT_COOKIE = "cookie-consent";
 export const PREF_LOCALE_COOKIE = "pref-locale";
-const PREF_STORAGE_KEY = "nura.prefs";
+const PREF_STORAGE_KEY = "site.prefs";
 
 type UiContextValue = {
   /** Berapa lapisan overlay yang sedang terbuka. Lenis berhenti kalau lebih dari nol. */
