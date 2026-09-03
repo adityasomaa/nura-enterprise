@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 
 import { CLIENT } from "../src/config/client.ts";
 import { ALBUMS, RIAS_ALBUMS, type SceneId, type StyleId } from "../src/data/site-content.ts";
-import { oklchToHex, mixHex, shiftHex, parseOklch } from "./lib/color.mjs";
+import { oklchToHex, mixHex, shiftHex, parseOklch } from "../src/lib/color.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "public", "graphics");
@@ -641,7 +641,7 @@ function heroSvg(): string {
 
 /** Ikon situs: monogram geometris tanpa latar, jadi transparan di tab manapun. */
 function iconSvg(): string {
-  const ink = oklchToHex("oklch(0.478 0.113 40)");
+  const ink = oklchToHex(CLIENT.accent.base);
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">`,
     `<path d="M 12 54 L 12 28 A 20 20 0 0 1 52 28 L 52 54" fill="none" stroke="${ink}" stroke-width="7" stroke-linecap="round"/>`,

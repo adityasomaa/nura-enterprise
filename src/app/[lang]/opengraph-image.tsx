@@ -2,7 +2,18 @@ import { ImageResponse } from "next/og";
 
 import { NEUE_MONTREAL_MEDIUM_TTF_BASE64 } from "@/assets/neue-montreal-medium";
 import { CLIENT } from "@/config/client";
+import { oklchToHex } from "@/lib/color";
 import { isLocale } from "@/lib/i18n";
+
+/* satori tidak menerima oklch, jadi token warna diubah ke hex di sini.
+   Warna aksen diambil dari config klien supaya OG image ikut berganti
+   sendiri saat basis kode ini dipakai untuk klien berikutnya. */
+const COLOR = {
+  paper: oklchToHex("oklch(0.976 0.006 78)"),
+  ink: oklchToHex("oklch(0.216 0.013 62)"),
+  ink2: oklchToHex("oklch(0.432 0.012 62)"),
+  accent: oklchToHex(CLIENT.accent.strong),
+};
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -27,10 +38,17 @@ export default async function OpengraphImage({
 }) {
   const { lang } = await params;
   const locale = isLocale(lang) ? lang : "id";
-  const tagline =
+  // Layanan yang disebut mengikuti flag di config, jadi tidak pernah
+  // mengklaim layanan yang tidak dilayani klien ini.
+  const service =
     locale === "id"
-      ? `Dekorasi pernikahan, ${CLIENT.address.locality}, ${CLIENT.address.region}`
-      : `Wedding decoration, ${CLIENT.address.locality}, ${CLIENT.address.region}`;
+      ? CLIENT.features.riasPengantin
+        ? "Dekorasi dan rias pengantin"
+        : "Dekorasi pernikahan"
+      : CLIENT.features.riasPengantin
+        ? "Wedding decoration and bridal makeup"
+        : "Wedding decoration";
+  const tagline = `${service}, ${CLIENT.address.locality}, ${CLIENT.address.region}`;
 
   return new ImageResponse(
     (
@@ -41,7 +59,7 @@ export default async function OpengraphImage({
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "#f7f3ee",
+          backgroundColor: COLOR.paper,
           padding: "72px 80px",
           fontFamily: "Neue Montreal",
         }}
@@ -51,34 +69,34 @@ export default async function OpengraphImage({
             <path
               d="M 12 54 L 12 28 A 20 20 0 0 1 52 28 L 52 54"
               fill="none"
-              stroke="#8a4a34"
+              stroke={COLOR.accent}
               strokeWidth="7"
               strokeLinecap="round"
             />
             <path
               d="M 24 54 L 24 22 L 40 42 L 40 22"
               fill="none"
-              stroke="#8a4a34"
+              stroke={COLOR.accent}
               strokeWidth="6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
-          <span style={{ fontSize: 26, letterSpacing: "0.22em", color: "#5c5049" }}>
+          <span style={{ fontSize: 26, letterSpacing: "0.22em", color: COLOR.ink2 }}>
             {CLIENT.address.locality.toUpperCase()}
           </span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <span style={{ fontSize: 86, lineHeight: 1.02, color: "#2a231e", letterSpacing: "-0.02em" }}>
+          <span style={{ fontSize: 86, lineHeight: 1.02, color: COLOR.ink, letterSpacing: "-0.02em" }}>
             {CLIENT.name}
           </span>
-          <span style={{ fontSize: 32, color: "#5c5049" }}>{tagline}</span>
+          <span style={{ fontSize: 32, color: COLOR.ink2 }}>{tagline}</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div style={{ width: 220, height: 3, backgroundColor: "#8a4a34" }} />
-          <span style={{ fontSize: 26, color: "#5c5049" }}>{CLIENT.domain}</span>
+          <div style={{ width: 220, height: 3, backgroundColor: COLOR.accent }} />
+          <span style={{ fontSize: 26, color: COLOR.ink2 }}>{CLIENT.domain}</span>
         </div>
       </div>
     ),

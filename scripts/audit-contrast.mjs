@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { contrastRatio, oklchToRgb, relativeLuminance } from "./lib/color.mjs";
+import { contrastRatio, oklchToRgb, relativeLuminance } from "../src/lib/color.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 

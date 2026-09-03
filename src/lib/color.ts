@@ -1,12 +1,19 @@
 /**
  * Konversi warna dan hitung kontras WCAG.
- * Dipakai oleh generator gambar dan oleh audit kontras.
- * Tidak ada dependensi eksternal supaya bisa jalan di mana saja.
+ *
+ * Satu-satunya tempat rumus warna ditulis. Dipakai bersama oleh aplikasi
+ * (untuk merender OG image, yang butuh warna dalam bentuk hex) dan oleh
+ * script generator gambar serta audit kontras di folder scripts/.
+ * Tanpa dependensi, jadi bisa dijalankan di mana saja.
  */
 
+export type Oklch = { l: number; c: number; h: number };
+export type Rgb = { r: number; g: number; b: number };
+
 /** Parse string "oklch(L C H)" atau "oklch(L C H / A)" menjadi angka. */
-export function parseOklch(input) {
-  const match = String(input)
+export function parseOklch(input: string | Oklch): Oklch {
+  if (typeof input !== "string") return input;
+  const match = input
     .trim()
     .match(/^oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+%?))?\s*\)$/i);
   if (!match) throw new Error(`bukan warna oklch yang valid: ${input}`);
@@ -14,19 +21,19 @@ export function parseOklch(input) {
   return { l, c: parseFloat(match[2]), h: parseFloat(match[3]) };
 }
 
-function gamma(x) {
+function gamma(x: number): number {
   return x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055;
 }
 
-function ungamma(x) {
+function ungamma(x: number): number {
   return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
 }
 
-const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
 /** OKLCH ke sRGB 0..255. */
-export function oklchToRgb(input) {
-  const { l: L, c: C, h: H } = typeof input === "string" ? parseOklch(input) : input;
+export function oklchToRgb(input: string | Oklch): Rgb {
+  const { l: L, c: C, h: H } = parseOklch(input);
   const hr = (H * Math.PI) / 180;
   const a = C * Math.cos(hr);
   const b = C * Math.sin(hr);
@@ -50,32 +57,30 @@ export function oklchToRgb(input) {
   };
 }
 
-export function oklchToHex(input) {
+export function oklchToHex(input: string | Oklch): string {
   const { r, g, b } = oklchToRgb(input);
   return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
 /** Luminansi relatif WCAG dari sRGB 0..255. */
-export function relativeLuminance({ r, g, b }) {
+export function relativeLuminance({ r, g, b }: Rgb): number {
   const [R, G, B] = [r, g, b].map((v) => ungamma(v / 255));
   return 0.2126 * R + 0.7152 * G + 0.0722 * B;
 }
 
 /** Rasio kontras WCAG antara dua warna. Terima string oklch atau objek rgb. */
-export function contrastRatio(a, b) {
+export function contrastRatio(a: string | Rgb, b: string | Rgb): number {
   const ra = typeof a === "string" ? oklchToRgb(a) : a;
   const rb = typeof b === "string" ? oklchToRgb(b) : b;
   const la = relativeLuminance(ra);
   const lb = relativeLuminance(rb);
-  const light = Math.max(la, lb);
-  const dark = Math.min(la, lb);
-  return (light + 0.05) / (dark + 0.05);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
 /** Campur dua warna oklch di ruang OKLab, kembalikan hex. t=0 warna pertama. */
-export function mixHex(a, b, t) {
-  const ca = typeof a === "string" ? parseOklch(a) : a;
-  const cb = typeof b === "string" ? parseOklch(b) : b;
+export function mixHex(a: string | Oklch, b: string | Oklch, t: number): string {
+  const ca = parseOklch(a);
+  const cb = parseOklch(b);
   return oklchToHex({
     l: ca.l + (cb.l - ca.l) * t,
     c: ca.c + (cb.c - ca.c) * t,
@@ -84,8 +89,8 @@ export function mixHex(a, b, t) {
 }
 
 /** Geser lightness dan chroma sebuah warna oklch, kembalikan hex. */
-export function shiftHex(base, dL = 0, dC = 0, dH = 0) {
-  const c = typeof base === "string" ? parseOklch(base) : base;
+export function shiftHex(base: string | Oklch, dL = 0, dC = 0, dH = 0): string {
+  const c = parseOklch(base);
   return oklchToHex({
     l: Math.min(1, Math.max(0, c.l + dL)),
     c: Math.max(0, c.c + dC),
