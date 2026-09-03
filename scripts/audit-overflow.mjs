@@ -20,6 +20,8 @@ import path from "node:path";
 
 import puppeteer from "puppeteer-core";
 
+import { CLIENT } from "../src/config/client.ts";
+
 /* Resolver DNS lokal kadang menyimpan hasil NXDOMAIN dari sebelum subdomain
    dibuat. HOST_RESOLVER_RULES memaksa browser memakai alamat IP yang benar
    tanpa mengubah nama host, jadi sertifikat tetap diverifikasi seperti biasa.
@@ -49,12 +51,16 @@ const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900, maxHeadingLines: 2 },
 ];
 
+/* Halaman rias hanya ikut diaudit kalau flagnya menyala di config, jadi daftar
+   ini otomatis benar untuk klien yang hanya melayani dekorasi maupun yang juga
+   melayani rias. */
 const PATHS = [
   "",
   "/galeri",
   "/galeri/resepsi-rustic-gedung",
   "/galeri/resepsi-tradisional-bali-pura",
   "/paket",
+  ...(CLIENT.features.riasPengantin ? ["/rias"] : []),
   "/kontak",
   "/privacy",
   "/terms",
