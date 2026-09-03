@@ -164,32 +164,51 @@ async function main() {
 
   /* ---------------------------------------------------------------- */
   console.log("\n=== Konsultasi dari dalam album ===");
-  const consultHref = await page.evaluate(() => {
+  /* Kode album dan gaya dibaca dari halamannya sendiri, bukan ditulis keras,
+     supaya skrip ini tetap benar untuk klien mana pun yang memakai basis kode
+     ini walau awalan kode albumnya berbeda. */
+  const source = await page.evaluate(() => {
     const link = [...document.querySelectorAll("a")].find((anchor) =>
       (anchor.getAttribute("href") ?? "").includes("album="),
     );
-    return link?.getAttribute("href") ?? "";
+    const href = link?.getAttribute("href") ?? "";
+    const params = new URLSearchParams(href.split("?")[1] ?? "");
+    const labels = [...document.querySelectorAll("dl div")].map((node) => ({
+      key: node.querySelector("dt")?.textContent?.trim() ?? "",
+      value: node.querySelector("dd")?.textContent?.trim() ?? "",
+    }));
+    return {
+      href,
+      album: params.get("album") ?? "",
+      style: params.get("style") ?? "",
+      styleLabel: labels.find((row) => row.key === "Gaya")?.value ?? "",
+      codeLabel: labels.find((row) => row.key === "Kode album")?.value ?? "",
+    };
   });
+  const consultHref = source.href;
   check(
     "tautan konsultasi album membawa kode dan gaya",
-    consultHref.includes("album=NRA-04") && consultHref.includes("style=tradisional-bali"),
+    source.album.length > 0 && source.style.length > 0,
     consultHref,
+  );
+  check(
+    "kode di tautan sama dengan kode yang ditampilkan album",
+    source.album === source.codeLabel,
+    `${source.album} vs ${source.codeLabel}`,
   );
 
   await page.goto(`${BASE}${consultHref}`, { waitUntil: "load" });
   await settle(2800);
 
-  const prefilled = await page.evaluate(() => {
-    const album = document.querySelector('input[name="album"]')?.value ?? "";
-    const style = document.querySelector('input[name="style"]')?.value ?? "";
-    const styleLabel = document.body.innerText.includes("Tradisional Bali");
-    const note = document.body.innerText.includes("NRA-04");
-    return { album, style, styleLabel, note };
-  });
-  check("kode album terisi otomatis", prefilled.album === "NRA-04", prefilled.album);
-  check("gaya dekorasi terisi otomatis", prefilled.style === "tradisional-bali", prefilled.style);
-  check("gaya tampil sebagai label terpilih", prefilled.styleLabel);
-  check("kode album disebut di halaman", prefilled.note);
+  const prefilled = await page.evaluate(() => ({
+    album: document.querySelector('input[name="album"]')?.value ?? "",
+    style: document.querySelector('input[name="style"]')?.value ?? "",
+    text: document.body.innerText,
+  }));
+  check("kode album terisi otomatis", prefilled.album === source.album, prefilled.album);
+  check("gaya dekorasi terisi otomatis", prefilled.style === source.style, prefilled.style);
+  check("gaya tampil sebagai label terpilih", prefilled.text.includes(source.styleLabel), source.styleLabel);
+  check("kode album disebut di halaman", prefilled.text.includes(source.album));
 
   // Isi form dan kirim, lalu periksa isi pesan yang dihasilkan server.
   await page.evaluate(() => {
@@ -250,14 +269,14 @@ async function main() {
     return { pre, wa };
   });
 
-  check("pesan memuat kode album", outcome.pre.includes("NRA-04"), outcome.pre.slice(0, 160));
-  check("pesan memuat gaya dekorasi yang benar", outcome.pre.includes("Tradisional Bali"));
+  check("pesan memuat kode album", outcome.pre.includes(source.album), outcome.pre.slice(0, 160));
+  check("pesan memuat gaya dekorasi yang benar", outcome.pre.includes(source.styleLabel));
   check("pesan memuat URL halaman asal", outcome.pre.includes("/kontak"));
   check("pesan memuat label tombol", outcome.pre.includes("Tombol:"));
   if (outcome.wa) {
     const decoded = decodeURIComponent(outcome.wa);
-    check("tautan wa.me memuat kode album", decoded.includes("NRA-04"));
-    check("tautan wa.me memuat gaya dekorasi", decoded.includes("Tradisional Bali"));
+    check("tautan wa.me memuat kode album", decoded.includes(source.album));
+    check("tautan wa.me memuat gaya dekorasi", decoded.includes(source.styleLabel));
   } else {
     console.log("  CATATAN nomor WhatsApp belum diisi di config, jadi tautan wa.me belum dibuat");
   }
